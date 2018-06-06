@@ -3,6 +3,8 @@ extern crate glium;
 
 mod squares;
 
+const INDICES: [u16; 6] = [0, 1, 3, 0, 2, 3];
+
 fn main() {
     use glium::{glutin, Surface};
 
@@ -13,6 +15,7 @@ fn main() {
 
     let context = glutin::ContextBuilder::new();
     let display = glium::Display::new(window, context, &events_loop).unwrap();
+    let indices = glium::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &INDICES).unwrap();
 
     let vertex_shader_src = r#"
         #version 140
@@ -37,22 +40,26 @@ fn main() {
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
-    let mut t: u32 = 1;
     let mut position_x = 0.0;
     let mut position_y = 0.0;
 
-    let mut fields = [false; 512];
-    let indices =
-        glium::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &[0u16, 1u16, 3u16, 0u16, 2u16, 3u16]).unwrap();
+    let mut fields = [false; 20 * 20];
 
     let mut closed = false;
     while !closed {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
 
-        for i in 0..400 {
-            let position = glium::VertexBuffer::new(&display, &[squares::VERTICES[i], squares::VERTICES[i+1], squares::VERTICES[i+21], squares::VERTICES[i+22]]).unwrap();
-            target.draw(&position, &indices, &program, &uniform!{t: if fields[i] { 1.0f32 } else { 0.0f32 } }, &Default::default()).unwrap();
+        for y in 0..20 {
+            for x in 0..20 {
+                let square = get_square(x, y);
+                let vertex_buffer = glium::VertexBuffer::new(&display, &square).unwrap();
+                target.draw(&vertex_buffer,
+                            &indices,
+                            &program, 
+                            &uniform!{t: if fields[x + y * 20] { 1.0f32 } else { 0.0f32 } },
+                            &Default::default()).unwrap();
+            }
         }
 
         target.finish().unwrap();
@@ -70,14 +77,9 @@ fn main() {
                             glutin::ElementState::Pressed => {
                                 let x = (position_x / 60.0) as u32;
                                 let y = (position_y / 60.0) as u32;
-                                println!("{:?}", x);
-                                println!("{:?}", y);
-                                println!("{:?}", state);
-                                println!("{:?}", fields[(y * 20 + x) as usize]);
                                 fields[(y * 20 + x) as usize] = true; 
-                                
-                            }
-                            glutin::ElementState::Released => println!("{:?}", state), 
+                            },
+                            glutin::ElementState::Released => (),
                         };
                     },
                     _ => ()
@@ -87,3 +89,10 @@ fn main() {
         });
     }
 }
+
+fn get_square(x: usize, y: usize) -> [squares::Vertex; 4] {
+    use squares::VERTICES;
+    [VERTICES[x + y * 21], VERTICES[x + y * 21 + 1], VERTICES[x + (y + 1) * 21], VERTICES[x + (y + 1) * 21 + 1]]
+}
+
+
