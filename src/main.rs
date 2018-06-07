@@ -42,6 +42,9 @@ fn main() {
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
+    let mut pre_generation = 0;
+    let mut generation = 0;
+
     let mut position_x = 0.0;
     let mut position_y = 0.0;
 
@@ -49,6 +52,7 @@ fn main() {
 
     let mut closed = false;
     while !closed {
+        //view
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
 
@@ -63,9 +67,20 @@ fn main() {
                             &Default::default()).unwrap();
             }
         }
-
         target.finish().unwrap();
 
+        //logic
+        if generation > pre_generation {
+            let interval = generation - pre_generation;
+
+            for step in 0..interval {
+//                update(&fields);
+            }
+            pre_generation = generation;
+        }
+
+
+        //input
         events_loop.poll_events(|event| {
             match event {
                 glutin::Event::WindowEvent { event, .. } => match event {
@@ -87,7 +102,7 @@ fn main() {
                     glutin::WindowEvent::KeyboardInput {input, ..}  => {
                         if input.scancode == SPACE {
                             if input.state == glutin::ElementState::Pressed {
-
+                                generation = generation + 1;
                             }
                         }
                     },
@@ -103,5 +118,43 @@ fn get_square(x: usize, y: usize) -> [squares::Vertex; 4] {
     use squares::VERTICES;
     [VERTICES[x + y * 21], VERTICES[x + y * 21 + 1], VERTICES[x + (y + 1) * 21], VERTICES[x + (y + 1) * 21 + 1]]
 }
+
+//fn update(fields: &[bool; 400]) {
+//    for y in 0..20 {
+//        for x in 0..20 {
+//            let f2 = (y - 1) * 20 + x;  
+//            let f4 = y * 20 + (x - 1);  
+//            let f5 = y * 20 + x;  
+//            let f6 = y * 20 + (x + 1);  
+//            let f8 = (y + 1) * 20 + x;  
+//
+//            let count = 0;
+//            for f in &[f2, f4, f6, f8] {
+//                if f < &0 || f > &400 { continue; }
+//                if fields[f] {
+//                    count = count + 1;
+//                }
+//            }
+//
+//            if fields[f5] {
+//                //survival
+//                //Crowded
+//                //Depopulation
+//
+//                match count {
+//                    2 | 3 => (),
+//                    1 | 0 | 4 => fields[f5] = false,
+//                    _ => println!("error"),
+//                }
+//            } else {
+//                //birth
+//                match count {
+//                    3 => fields[f5] = true,
+//                    _ => ()
+//                }
+//            }
+//        }
+//    }
+//}
 
 
