@@ -3,10 +3,12 @@ extern crate glium;
 
 mod squares;
 
+use glium::{glutin, Surface};
+
 const INDICES: [u16; 6] = [0, 1, 3, 0, 2, 3];
+const SPACE: glutin::ScanCode = 49;
 
 fn main() {
-    use glium::{glutin, Surface};
 
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
@@ -81,6 +83,13 @@ fn main() {
                             },
                             glutin::ElementState::Released => (),
                         };
+                    },
+                    glutin::WindowEvent::KeyboardInput {input, ..}  => {
+                        if input.scancode == SPACE {
+                            if input.state == glutin::ElementState::Pressed {
+
+                            }
+                        }
                     },
                     _ => ()
                 },
