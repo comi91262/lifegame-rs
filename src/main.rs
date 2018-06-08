@@ -72,9 +72,8 @@ fn main() {
         //logic
         if generation > pre_generation {
             let interval = generation - pre_generation;
-
-            for step in 0..interval {
-//                update(&fields);
+            for _ in 0..interval {
+                update(&mut fields);
             }
             pre_generation = generation;
         }
@@ -119,42 +118,60 @@ fn get_square(x: usize, y: usize) -> [squares::Vertex; 4] {
     [VERTICES[x + y * 21], VERTICES[x + y * 21 + 1], VERTICES[x + (y + 1) * 21], VERTICES[x + (y + 1) * 21 + 1]]
 }
 
-//fn update(fields: &[bool; 400]) {
-//    for y in 0..20 {
-//        for x in 0..20 {
-//            let f2 = (y - 1) * 20 + x;  
-//            let f4 = y * 20 + (x - 1);  
-//            let f5 = y * 20 + x;  
-//            let f6 = y * 20 + (x + 1);  
-//            let f8 = (y + 1) * 20 + x;  
-//
-//            let count = 0;
-//            for f in &[f2, f4, f6, f8] {
-//                if f < &0 || f > &400 { continue; }
-//                if fields[f] {
-//                    count = count + 1;
-//                }
-//            }
-//
-//            if fields[f5] {
-//                //survival
-//                //Crowded
-//                //Depopulation
-//
-//                match count {
-//                    2 | 3 => (),
-//                    1 | 0 | 4 => fields[f5] = false,
-//                    _ => println!("error"),
-//                }
-//            } else {
-//                //birth
-//                match count {
-//                    3 => fields[f5] = true,
-//                    _ => ()
-//                }
-//            }
-//        }
-//    }
-//}
+
+fn update(fields: &mut [bool; 400]) {
+    let mut birth = vec![];
+    let mut vanish = vec![];
+
+    for y in 0..20 {
+        for x in 0..20 {
+            let center = y * 20 + x;  
+
+            let u = (y - 1) * 20 + x;  
+            let ur = (y - 1) * 20 + x - 1;
+            let ul = (y - 1) * 20 + x + 1;
+
+            let r = y * 20 + (x - 1);  
+            let l = y * 20 + (x + 1);  
+            
+            let lo = (y + 1) * 20 + x;  
+            let lr = (y + 1) * 20 + x - 1;  
+            let ll = (y + 1) * 20 + x + 1;  
+
+            let mut count = 0;
+            for f in &[u, ur, ul, r, l, lo, lr, ll] {
+                let g = *f;
+                if g < 0 || g >= 400 { continue; }
+                if fields[g as usize] {
+                    count = count + 1;
+                }
+            }
+
+            if fields[center as usize] {
+                match count {
+                    2 | 3 => (),
+                    1 | 0 | 4 | 5 | 6 | 7 | 8 => vanish.push((x, y)),
+                    _ => println!("error"),
+                }
+            } else {
+                match count {
+                    3 => birth.push((x, y)),
+                    _ => ()
+                }
+            }
+        }
+    }
+
+    for (x, y) in birth.iter() {
+        let center = y * 20 + x;
+        fields[center as usize] = true;
+    }
+
+    for (x, y) in vanish.iter() {
+        let center = y * 20 + x;
+        fields[center as usize] = false;
+    }
+
+}
 
 
